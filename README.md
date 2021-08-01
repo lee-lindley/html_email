@@ -27,6 +27,10 @@ into *plsql_utilities* folder.
 
 Follow the instructions in [install.sql](#installsql)
 
+Note that you do not absolutely require the submodule. The only essential
+element is *arr_varchar2_udt* which is simple enough to create yourself
+as noted in [install.sql](#installsql).
+
 ## html_email_udt
 
 An Object type for constructing and sending an HTML email, optionally with
