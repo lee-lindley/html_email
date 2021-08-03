@@ -254,11 +254,9 @@ EXCEPTION WHEN OTHERS THEN
             ,p_smtp_server => 'localhost'
             ,p_body => 'Exception failed job xyz with the following information:'
         ).add_paragraph(
-            'sqlerrm: '||SQLERRM
+            'sqlerrm:<br><br><pre><code>'||SQLERRM||'</code></pre>'
         ).add_paragraph(
-            'backtrace: '||DBMS_UTILITY.FORMAT_ERROR_BACKTRACE
-        ).add_paragraph(
-            'callstack  : '||DBMS_UTILITY.FORMAT_CALL_STACK
+            'backtrace:<br><br><pre><code>'||DBMS_UTILITY.FORMAT_ERROR_BACKTRACE||'</code></pre>'
         ).send
     ;
     RAISE;
