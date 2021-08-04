@@ -162,6 +162,8 @@ on the constructor parameters below are those currently defined in "install.sql"
     ,MEMBER PROCEDURE send(SELF IN html_email_udt) -- cannot be in/out if we allow chaining it.
     ,MEMBER PROCEDURE add_paragraph(SELF IN OUT NOCOPY html_email_udt , p_clob CLOB)
     ,MEMBER FUNCTION  add_paragraph(p_clob CLOB) RETURN html_email_udt
+    ,MEMBER PROCEDURE add_code_block(SELF IN OUT NOCOPY html_email_udt , p_clob CLOB)
+    ,MEMBER FUNCTION  add_code_block(p_clob CLOB) RETURN html_email_udt
     ,MEMBER PROCEDURE add_to_body(SELF IN OUT NOCOPY html_email_udt, p_clob CLOB)
     ,MEMBER FUNCTION  add_to_body(p_clob CLOB) RETURN html_email_udt
     ,MEMBER PROCEDURE add_table_to_body( -- see cursor_to_table
@@ -253,10 +255,10 @@ EXCEPTION WHEN OTHERS THEN
             ,p_subject => 'error from procedure'
             ,p_smtp_server => 'localhost'
             ,p_body => 'Exception failed job xyz with the following information:'
-        ).add_paragraph(
-            'sqlerrm:<br><br><pre><code>'||SQLERRM||'</code></pre>'
-        ).add_paragraph(
-            'backtrace:<br><br><pre><code>'||DBMS_UTILITY.FORMAT_ERROR_BACKTRACE||'</code></pre>'
+        ).add_code_block(
+            'sqlerrm   : '||SQLERRM
+        ).add_code_block(
+            'backtrace : '||DBMS_UTILITY.FORMAT_ERROR_BACKTRACE
         ).send
     ;
     RAISE;

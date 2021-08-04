@@ -147,6 +147,8 @@ $end
     ,MEMBER PROCEDURE send(SELF IN html_email_udt) -- cannot be in/out if we allow chaining it.
     ,MEMBER PROCEDURE add_paragraph(SELF IN OUT NOCOPY html_email_udt , p_clob CLOB)
     ,MEMBER FUNCTION  add_paragraph(p_clob CLOB) RETURN html_email_udt
+    ,MEMBER PROCEDURE add_code_block(SELF IN OUT NOCOPY html_email_udt , p_clob CLOB)
+    ,MEMBER FUNCTION  add_code_block(p_clob CLOB) RETURN html_email_udt
     ,MEMBER PROCEDURE add_to_body(SELF IN OUT NOCOPY html_email_udt, p_clob CLOB)
     ,MEMBER FUNCTION  add_to_body(p_clob CLOB) RETURN html_email_udt
     ,MEMBER PROCEDURE add_table_to_body( -- see cursor_to_table

@@ -102,6 +102,24 @@ $end
         RETURN l_self;
     END; -- add_paragraph
 
+    MEMBER PROCEDURE add_code_block(SELF IN OUT NOCOPY html_email_udt, p_clob CLOB)
+    IS
+    BEGIN
+        IF body IS NULL THEN
+            body := '<pre><code>'||p_clob||'</code></pre><br>';
+        ELSE
+            body := body||'<br><pre><code>'
+                    ||p_clob||'</code></pre><br>';
+        END IF;
+    END; -- add_code_block
+    MEMBER FUNCTION add_code_block(p_clob CLOB) RETURN html_email_udt
+    IS
+        l_self  html_email_udt := SELF;
+    BEGIN
+        l_self.add_code_block(p_clob);
+        RETURN l_self;
+    END; -- add_code_block
+
 
     MEMBER PROCEDURE add_to(SELF IN OUT NOCOPY html_email_udt, p_to VARCHAR2)
     IS
