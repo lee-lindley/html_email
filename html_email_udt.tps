@@ -232,7 +232,12 @@ $end
         ,p_refcursor    SYS_REFCURSOR   := NULL
         -- if provided, will be the caption on the table, generally centered 
         -- on the top of the table by most renderers.
-        ,p_caption      VARCHAR2        := NULL
+        ,p_caption      VARCHAR2        := NULL]'
+$if $$use_app_log $then
+        ||q'[
+        ,p_log          app_log_udt     := NULL]'
+$end
+||q'[
     ) RETURN CLOB
     ,STATIC FUNCTION s_split(
          p_s            VARCHAR2

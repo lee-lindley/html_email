@@ -259,6 +259,9 @@ $end
                 p_sql_string    => p_sql_string
                 ,p_refcursor    => p_refcursor
                 ,p_caption      => p_caption
+$if $$use_app_log $then
+                ,p_log          => log
+$end
               );
     END; -- end add_table_to_body
     MEMBER FUNCTION add_table_to_body( -- see cursor_to_table
@@ -278,6 +281,9 @@ $end
         p_sql_string    CLOB            := NULL 
         ,p_refcursor    SYS_REFCURSOR   := NULL
         ,p_caption      VARCHAR2        := NULL
+$if $$use_app_log $then
+        ,p_log         app_log_udt      := NULL
+$end
     ) RETURN CLOB
     IS
         v_context       DBMS_XMLGEN.CTXHANDLE;
@@ -347,7 +353,11 @@ $end
         EXCEPTION WHEN e_null_object_ref THEN 
             v_html := NULL; -- most likely the cursor returned no rows
 $if $$use_app_log $then
-            app_log_udt.log_p('html_email_udt', 'cursor_to_table executed cursor that returned no rows. Returning NULL');
+            DECLARE
+                l_log app_log_udt := NVL(p_log, app_log_udt('html_email_udt'));
+            BEGIN
+                l_log.log_p('cursor_to_table executed cursor that returned no rows. Returning NULL');
+            END;
 $else
             DBMS_OUTPUT.put_line('cursor_to_table executed cursor that returned no rows. Returning NULL');
 $end

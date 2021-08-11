@@ -1,6 +1,6 @@
 # html_email
 
-Oracle PL/SQL HTML E-mail Construction and Transmission Including Attachments
+Oracle PL/SQL E-mail Construction and Transmission with HTML Format Message Body and Optional Attachments
 
 ## Content
 * [Installation](#installation)
@@ -33,7 +33,7 @@ as noted in [install.sql](#installsql).
 
 ## html_email_udt
 
-An Object type for constructing and sending an HTML email, optionally with
+An Oracle Object Type for constructing and sending an HTML email, optionally with
 attachments. The best way to explain is with a usage example.
 
 ### Example
@@ -76,9 +76,11 @@ BEGIN
     );
     v_email.add_paragraph('We constructed and sent this email with html_email_udt.');
     v_src := l_getcurs;
-    --v_email.add_to_body(html_email_udt.cursor_to_table(p_refcursor => v_src, p_caption => 'DBA Views'));
+
+    -- convert sql query result set into HTML table
     v_email.add_table_to_body(p_refcursor => v_src, p_caption => 'DBA Views');
-    -- we need to close it because we are going to open again.
+
+    -- need to close it because we are going to open again.
     -- The called package may have closed it, but must be sure or nasty
     -- bugs/caching can happen.
     BEGIN
@@ -86,6 +88,7 @@ BEGIN
     EXCEPTION WHEN invalid_cursor THEN NULL;
     END;
 
+    -- add a spreadsheet attachment
     -- https://github.com/mbleron/ExcelGen
     DECLARE
         l_xlsx_blob     BLOB;
@@ -223,6 +226,8 @@ or use it for a different purpose. It is called by member method *add_table_to_b
         -- if provided, will be the caption on the table, generally centered on the top of it
         -- by most renderers.
         ,p_caption      VARCHAR2        := NULL
+        -- compile time decision whether attribute 'log' is included
+        ,p_log              app_log_udt DEFAULT NULL 
     ) RETURN CLOB
 ```
 ### Privileges
