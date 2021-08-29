@@ -40,7 +40,7 @@ define reply_to="donotreply@bogus.com"
 define smtp_server="localhost"
 --
 --
-define subdir=plsql_utilities
+define subdir=plsql_utilities/app_types
 prompt calling &&subdir/arr_varchar2_udt.tps
 @&&subdir/arr_varchar2_udt.tps
 --
@@ -157,3 +157,12 @@ ALTER SESSION SET plsql_optimize_level=2;
 ALTER SESSION SET plsql_code_type = INTERPRETED;
 --GRANT EXECUTE ON html_email_udt TO ???;
 prompt deployment of html_email_udt and supporting types and packages is complete
+--
+prompt running compile_schema for invalid objects
+BEGIN
+    DBMS_UTILITY.compile_schema( schema => SYS_CONTEXT('userenv','current_schema')
+                                ,compile_all => FALSE
+                                ,reuse_settings => TRUE
+                            );
+END;
+/
