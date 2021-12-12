@@ -139,6 +139,10 @@ we provide a way to do it right, and that is the default behavior if you use "in
 Although object attributes cannot be made private, you have 
 no need for them. The object interface is through the methods.
 
+The type is marked as NOT FINAL so that you can derive a subtype from it. Possible uses
+involve adding methods for local conventions, such as a signature block, and perhaps
+overriding or supplementing methods with localized html conventions.
+
 It is recommended that you edit [install.sql](#installsql) before deploying to set suitable values 
 for *smtp_server*, *reply_to* and *from_email_addr* define variables. The DEFAULT values
 on the constructor parameters below are those currently defined in "install.sql".
@@ -158,11 +162,24 @@ on the constructor parameters below are those currently defined in "install.sql"
         -- compile time decision whether attribute 'log' is included
         ,p_log              app_log_udt DEFAULT NULL 
     ) RETURN SELF AS RESULT
+    ,FINAL MEMBER PROCEDURE html_email_constructor(
+        SELF IN OUT NOCOPY html_email_udt
+        ,p_to_list          VARCHAR2 DEFAULT NULL
+        ,p_cc_list          VARCHAR2 DEFAULT NULL
+        ,p_bcc_list         VARCHAR2 DEFAULT NULL
+        ,p_from_email_addr  VARCHAR2 DEFAULT '&&from_email_addr'
+        ,p_reply_to         VARCHAR2 DEFAULT '&&reply_to'
+        ,p_smtp_server      VARCHAR2 DEFAULT '&&smtp_server'
+        ,p_subject          VARCHAR2 DEFAULT NULL
+        ,p_body             CLOB DEFAULT NULL
+        -- compile time decision whether attribute 'log' is included
+        ,p_log              app_log_udt DEFAULT NULL
+
     --
     -- best explanation of method chaining rules I found is
     -- https://stevenfeuersteinonplsql.blogspot.com/2019/09/object-type-methods-part-3.html
     --
-    ,MEMBER PROCEDURE send(SELF IN html_email_udt) -- cannot be in/out if we allow chaining it.
+    ,FINAL MEMBER PROCEDURE send(SELF IN html_email_udt) -- cannot be in/out if we allow chaining it.
     ,MEMBER PROCEDURE add_paragraph(SELF IN OUT NOCOPY html_email_udt , p_clob CLOB)
     ,MEMBER FUNCTION  add_paragraph(p_clob CLOB) RETURN html_email_udt
     ,MEMBER PROCEDURE add_code_block(SELF IN OUT NOCOPY html_email_udt , p_clob CLOB)
@@ -238,6 +255,10 @@ work from your DBA, and maybe the firewall and/or network team.
 There is some information in comments in [install.sql](#installsql)
 about Access Control Lists for the network priv.
 
+A compile time option allows configuring with invoker rights (AUTHID CURRENT_USER) in
+which case the calling schemas will require the network access control in addition
+to the compiling schema.
+
 The [Example](#example) shows using sendmail listening on port 25 on my 
 local RHL database server (localhost), but you will likely need to use a 
 company relay such as **smtp.mycompany.com**.
@@ -272,16 +293,17 @@ END;
 ## install.sql
 
 Runs each of these scripts in correct order and with compile options. There are a set
-of four sqlplus "define" commands at the top that populate compile directives in
+of five sqlplus "define" commands at the top that populate compile directives in
 *PLSQL_CCFLAGS*.
 
-    ALTER SESSION SET PLSQL_CCFLAGS='use_app_log:TRUE,use_app_parameter:FALSE,use_mime_type:TRUE,use_split:TRUE';
+    ALTER SESSION SET PLSQL_CCFLAGS='use_app_log:TRUE,use_app_parameter:FALSE,use_mime_type:TRUE,use_split:TRUE,use_invoker_rights:FALSE';
 
 There are three "define" statements for default values for the *html_email_udt* constructor
 that should also be set appropriately. 
 
 *install.sql* has directions allowing choice on whether
 to use anything from the submodule. None is required except for the type *arr_varchar2_udt*
-which is easy enough to replace manually. You might also choose to global substitute for it
-in the code to use a type you already have deployed.
+which is easy enough to replace. If you already have a 'TABLE OF VARCHAR2(4000)' object deployed,
+look in the install script for the define of *array_varchar2_type*.
+Comment out any installs you do not need.
 

@@ -16,6 +16,29 @@ $end
     RETURN SELF AS RESULT
     IS
     BEGIN
+        html_email_constructor(
+            p_to_list, p_cc_list, p_bcc_list, p_from_email_addr, p_reply_to, p_smtp_server, p_subject, p_body
+$if $$use_app_log $then
+            ,p_log
+$end
+        );
+        RETURN;
+    END; -- end constructor html_email_udt
+    FINAL MEMBER PROCEDURE html_email_constructor(
+        SELF IN OUT NOCOPY html_email_udt
+        ,p_to_list          VARCHAR2 DEFAULT NULL
+        ,p_cc_list          VARCHAR2 DEFAULT NULL
+        ,p_bcc_list         VARCHAR2 DEFAULT NULL
+        ,p_from_email_addr  VARCHAR2 DEFAULT '&&from_email_addr'
+        ,p_reply_to         VARCHAR2 DEFAULT '&&reply_to'
+        ,p_smtp_server      VARCHAR2 DEFAULT '&&smtp_server'
+        ,p_subject          VARCHAR2 DEFAULT NULL
+        ,p_body             CLOB DEFAULT NULL
+$if $$use_app_log $then
+        ,p_log              app_log_udt DEFAULT NULL
+$end
+    ) IS
+    BEGIN
         -- split will return an initialized, empty collection object if the 
         -- input string is null
         arr_to          := html_email_udt.s_split(p_to_list);
@@ -30,20 +53,19 @@ $end
 $if $$use_app_log $then
         log             := NVL(p_log, app_log_udt('HTML_EMAIL_UDT'));
 $end
-        RETURN;
     END; -- end constructor html_email_udt
 
     STATIC FUNCTION s_split(
         p_s             VARCHAR2
         ,p_separator    VARCHAR2 := ','
-    ) RETURN arr_varchar2_udt
+    ) RETURN &&array_varchar2_type.
     IS
 $if $$use_split $then
     BEGIN
         RETURN split(p_s => p_s, p_separator => p_separator, p_strip_dquote => 'N');
 $else
         v_str       VARCHAR2(4000);
-        v_a         arr_varchar2_udt := arr_varchar2_udt();
+        v_a         &&array_varchar2_type. := &&array_varchar2_type.();
         v_occurence BINARY_INTEGER := 1;
     BEGIN
         LOOP
@@ -123,7 +145,7 @@ $end
 
     MEMBER PROCEDURE add_to(SELF IN OUT NOCOPY html_email_udt, p_to VARCHAR2)
     IS
-        v_arr   arr_varchar2_udt;
+        v_arr   &&array_varchar2_type.;
     BEGIN
         v_arr := html_email_udt.s_split(p_to);
         FOR i IN 1..v_arr.COUNT
@@ -143,7 +165,7 @@ $end
 
     MEMBER PROCEDURE add_cc(p_cc VARCHAR2)
     IS
-        v_arr   arr_varchar2_udt;
+        v_arr   &&array_varchar2_type.;
     BEGIN
         v_arr := html_email_udt.s_split(p_cc);
         FOR i IN 1..v_arr.COUNT
@@ -162,7 +184,7 @@ $end
 
     MEMBER PROCEDURE add_bcc(SELF IN OUT NOCOPY html_email_udt, p_bcc VARCHAR2)
     IS
-        v_arr   arr_varchar2_udt;
+        v_arr   &&array_varchar2_type.;
     BEGIN
         v_arr := html_email_udt.s_split(p_bcc);
         FOR i IN 1..v_arr.COUNT
@@ -367,7 +389,7 @@ $end
         RETURN v_html;
     END cursor_to_table;
 
-    MEMBER PROCEDURE send(SELF IN html_email_udt) -- so it can be chained
+    FINAL MEMBER PROCEDURE send(SELF IN html_email_udt) -- so it can be chained
     IS
         v_smtp              UTL_SMTP.connection;
         v_myhostname        VARCHAR2(255);
@@ -575,20 +597,16 @@ $if $$use_app_log $then
                           END
         );
 $end
-        EXCEPTION WHEN OTHERS THEN
 $if $$use_app_log $then
+        EXCEPTION WHEN OTHERS THEN
             v_log.log_p('sqlerrm    : '||SQLERRM);
             v_log.log_p('backtrace  : '||DBMS_UTILITY.FORMAT_ERROR_BACKTRACE);
             v_log.log_p('callstack  : '||DBMS_UTILITY.FORMAT_CALL_STACK);
-$else
-            DBMS_OUTPUT.put_line('sqlerrm    : '||SQLERRM);
-            DBMS_OUTPUT.put_line('backtrace  : '||DBMS_UTILITY.FORMAT_ERROR_BACKTRACE);
-            DBMS_OUTPUT.put_line('callstack  : '||DBMS_UTILITY.FORMAT_CALL_STACK);
-$end
             RAISE;
-
+    -- otherwise let the caller handle exceptions
+$end
     END; -- send
 
-END;
+END; -- end of html_email_udt package body definition
 /
 show errors

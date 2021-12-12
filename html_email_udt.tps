@@ -1,6 +1,9 @@
 BEGIN -- cause need compile directives
-EXECUTE IMMEDIATE q'[
-CREATE OR REPLACE TYPE html_email_udt AS OBJECT (
+EXECUTE IMMEDIATE 'CREATE OR REPLACE TYPE html_email_udt' 
+$if $$use_invoker_rights $then
+||' AUTHID CURRENT_USER'
+$end
+||q'[ AS OBJECT (
     /*
         An object for creating and sending an email message with an HTML
         body and optional attachments.
@@ -111,9 +114,9 @@ SOFTWARE.
 --
 -- You have no need to muck with these object attributes directly. Use the methods.
     attachments         arr_email_attachment_udt
-    ,arr_to             arr_varchar2_udt
-    ,arr_cc             arr_varchar2_udt
-    ,arr_bcc            arr_varchar2_udt
+    ,arr_to             &&array_varchar2_type.
+    ,arr_cc             &&array_varchar2_type.
+    ,arr_bcc            &&array_varchar2_type.
     ,from_email_addr    VARCHAR2(4000)
     ,reply_to           VARCHAR2(4000)
     ,smtp_server        VARCHAR2(4000)
@@ -140,11 +143,27 @@ $end
 ||q'[
     )
         RETURN SELF AS RESULT
+    ,FINAL MEMBER PROCEDURE html_email_constructor(
+        SELF IN OUT NOCOPY html_email_udt
+        ,p_to_list          VARCHAR2 DEFAULT NULL
+        ,p_cc_list          VARCHAR2 DEFAULT NULL
+        ,p_bcc_list         VARCHAR2 DEFAULT NULL
+        ,p_from_email_addr  VARCHAR2 DEFAULT '&&from_email_addr'
+        ,p_reply_to         VARCHAR2 DEFAULT '&&reply_to'
+        ,p_smtp_server      VARCHAR2 DEFAULT '&&smtp_server'
+        ,p_subject          VARCHAR2 DEFAULT NULL
+        ,p_body             CLOB DEFAULT NULL]'
+$if $$use_app_log $then
+        ||q'[
+        ,p_log              app_log_udt DEFAULT NULL]'
+$end
+||q'[
+    )
     --
     -- best explanation of method chaining rules I found is
     -- https://stevenfeuersteinonplsql.blogspot.com/2019/09/object-type-methods-part-3.html
     --
-    ,MEMBER PROCEDURE send(SELF IN html_email_udt) -- cannot be in/out if we allow chaining it.
+    ,FINAL MEMBER PROCEDURE send(SELF IN html_email_udt) -- cannot be in/out if we allow chaining it.
     ,MEMBER PROCEDURE add_paragraph(SELF IN OUT NOCOPY html_email_udt , p_clob CLOB)
     ,MEMBER FUNCTION  add_paragraph(p_clob CLOB) RETURN html_email_udt
     ,MEMBER PROCEDURE add_code_block(SELF IN OUT NOCOPY html_email_udt , p_clob CLOB)
@@ -242,8 +261,10 @@ $end
     ,STATIC FUNCTION s_split(
          p_s            VARCHAR2
         ,p_separator    VARCHAR2 := ','
-    ) RETURN arr_varchar2_udt
-);
+    ) RETURN &&array_varchar2_type.
+)
+NOT FINAL
+;
 ]'; -- end execute immediate
 END; -- end anonymous block
 /

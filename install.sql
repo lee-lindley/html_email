@@ -33,12 +33,16 @@ define use_split="TRUE"
 define use_app_log="TRUE"
 define use_app_parameter="FALSE"
 define use_mime_type="TRUE"
-ALTER SESSION SET PLSQL_CCFLAGS='use_app_log:&&use_app_log.,use_app_parameter:&&use_app_parameter.,use_mime_type:&&use_mime_type.,use_split:&&use_split.';
+define use_invoker_rights="FALSE"
+ALTER SESSION SET PLSQL_CCFLAGS='use_app_log:&&use_app_log.,use_app_parameter:&&use_app_parameter.,use_mime_type:&&use_mime_type.,use_split:&&use_split.,use_invoker_rights:&&use_invoker_rights.';
 -- set these appropriately for html_email_udt
 define from_email_addr="donotreply@bogus.com"
 define reply_to="donotreply@bogus.com"
 define smtp_server="localhost"
 --
+-- if you do not want to install arr_varchar2_udt, then
+-- change this to your own implementation of a type that consists of TABLE OF VARCHAR2(4000)
+define array_varchar2_type="arr_varchar2_udt"
 --
 define subdir=plsql_utilities/app_types
 prompt calling &&subdir/arr_varchar2_udt.tps
@@ -86,6 +90,11 @@ $if $$use_split $then
     DBMS_OUTPUT.put_line('use_split is TRUE');
 $else
     DBMS_OUTPUT.put_line('use_split is FALSE');
+$end
+$if $$use_invoker_rights $then
+    DBMS_OUTPUT.put_line('use_invoker_rights is TRUE');
+$else
+    DBMS_OUTPUT.put_line('use_invoker_rights is FALSE');
 $end
 END;
 /
@@ -158,6 +167,7 @@ ALTER SESSION SET plsql_code_type = INTERPRETED;
 --GRANT EXECUTE ON html_email_udt TO ???;
 prompt deployment of html_email_udt and supporting types and packages is complete
 --
+/*
 prompt running compile_schema for invalid objects
 BEGIN
     DBMS_UTILITY.compile_schema( schema => SYS_CONTEXT('userenv','current_schema')
@@ -166,3 +176,4 @@ BEGIN
                             );
 END;
 /
+*/
