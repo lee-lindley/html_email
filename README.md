@@ -296,7 +296,7 @@ Runs each of these scripts in correct order and with compile options. There are 
 of five sqlplus "define" commands at the top that populate compile directives in
 *PLSQL_CCFLAGS*.
 
-    ALTER SESSION SET PLSQL_CCFLAGS='use_app_log:TRUE,use_app_parameter:FALSE,use_mime_type:TRUE,use_split:TRUE,use_invoker_rights:FALSE';
+    ALTER SESSION SET PLSQL_CCFLAGS='use_app_log:TRUE,use_app_parameter:FALSE,use_mime_type:TRUE,use_invoker_rights:FALSE';
 
 There are three "define" statements for default values for the *html_email_udt* constructor
 that should also be set appropriately. 

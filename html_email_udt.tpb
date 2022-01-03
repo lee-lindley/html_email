@@ -60,10 +60,6 @@ $end
         ,p_separator    VARCHAR2 := ','
     ) RETURN &&array_varchar2_type.
     IS
-$if $$use_split $then
-    BEGIN
-        RETURN split(p_s => p_s, p_separator => p_separator, p_strip_dquote => 'N');
-$else
         v_str       VARCHAR2(4000);
         v_a         &&array_varchar2_type. := &&array_varchar2_type.();
         v_occurence BINARY_INTEGER := 1;
@@ -87,7 +83,6 @@ $else
             v_occurence := v_occurence + 1; -- keep track of where we are in the string
         END LOOP;
         RETURN v_a;      
-$end
     END;
 
     MEMBER PROCEDURE add_to_body(SELF IN OUT NOCOPY html_email_udt, p_clob CLOB)

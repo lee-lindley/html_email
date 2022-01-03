@@ -2,11 +2,6 @@
 -- REQUIRES: arr_varchar2_udt
 --      If you have your own you can easily substitute it in the code yourself.
 --          Otherwise, deploy the one provided.
--- REQUIRES: split
---      if you do not want to deploy mine, set use_split to FALSE
---      and we will use a simpler function internal to the type. In that
---      case comment out the call to split.sql
---
 -- We optionally use app_parameter and app_log based on compile directives.
 -- If you set either or both TRUE, you need to run the corresponding install scipt.
 -- If you set them to FALSE, comment out the call to those scripts.
@@ -29,12 +24,11 @@
 whenever sqlerror exit failure
 set serveroutput on
 set define on
-define use_split="TRUE"
 define use_app_log="TRUE"
 define use_app_parameter="FALSE"
 define use_mime_type="TRUE"
 define use_invoker_rights="FALSE"
-ALTER SESSION SET PLSQL_CCFLAGS='use_app_log:&&use_app_log.,use_app_parameter:&&use_app_parameter.,use_mime_type:&&use_mime_type.,use_split:&&use_split.,use_invoker_rights:&&use_invoker_rights.';
+ALTER SESSION SET PLSQL_CCFLAGS='use_app_log:&&use_app_log.,use_app_parameter:&&use_app_parameter.,use_mime_type:&&use_mime_type.,use_invoker_rights:&&use_invoker_rights.';
 -- set these appropriately for html_email_udt
 define from_email_addr="donotreply@bogus.com"
 define reply_to="donotreply@bogus.com"
@@ -47,10 +41,6 @@ define array_varchar2_type="arr_varchar2_udt"
 define subdir=plsql_utilities/app_types
 prompt calling &&subdir/arr_varchar2_udt.tps
 @&&subdir/arr_varchar2_udt.tps
---
-define subdir=plsql_utilities
-prompt calling &&subdir/split.sql
-@&&subdir/split.sql
 --
 define subdir=plsql_utilities/app_log
 prompt calling &&subdir/install_app_log.sql
@@ -85,11 +75,6 @@ $if $$use_mime_type $then
     DBMS_OUTPUT.put_line('use_mime_type is TRUE');
 $else
     DBMS_OUTPUT.put_line('use_mime_type is FALSE');
-$end
-$if $$use_split $then
-    DBMS_OUTPUT.put_line('use_split is TRUE');
-$else
-    DBMS_OUTPUT.put_line('use_split is FALSE');
 $end
 $if $$use_invoker_rights $then
     DBMS_OUTPUT.put_line('use_invoker_rights is TRUE');
