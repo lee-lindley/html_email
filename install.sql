@@ -1,7 +1,6 @@
 --
 -- REQUIRES: arr_varchar2_udt
---      If you have your own you can easily substitute it in the code yourself.
---          Otherwise, deploy the one provided.
+--      If you have your own just change the name in the define and comment out the call to build it.
 -- We optionally use app_parameter and app_log based on compile directives.
 -- If you set either or both TRUE, you need to run the corresponding install scipt.
 -- If you set them to FALSE, comment out the call to those scripts.
@@ -36,7 +35,8 @@ define smtp_server="localhost"
 --
 -- if you do not want to install arr_varchar2_udt, then
 -- change this to your own implementation of a type that consists of TABLE OF VARCHAR2(4000)
-define array_varchar2_type="arr_varchar2_udt"
+-- Or you can just change the name here and it will compile the type with that name
+define d_arr_varchar2_udt ="arr_varchar2_udt"
 --
 define subdir=plsql_utilities/app_types
 prompt calling &&subdir/arr_varchar2_udt.tps

@@ -58,10 +58,10 @@ $end
     STATIC FUNCTION s_split(
         p_s             VARCHAR2
         ,p_separator    VARCHAR2 := ','
-    ) RETURN &&array_varchar2_type.
+    ) RETURN &&d_arr_varchar2_udt.
     IS
         v_str       VARCHAR2(4000);
-        v_a         &&array_varchar2_type. := &&array_varchar2_type.();
+        v_a         &&d_arr_varchar2_udt. := &&d_arr_varchar2_udt.();
         v_occurence BINARY_INTEGER := 1;
     BEGIN
         LOOP
@@ -140,7 +140,7 @@ $end
 
     MEMBER PROCEDURE add_to(SELF IN OUT NOCOPY html_email_udt, p_to VARCHAR2)
     IS
-        v_arr   &&array_varchar2_type.;
+        v_arr   &&d_arr_varchar2_udt.;
     BEGIN
         v_arr := html_email_udt.s_split(p_to);
         FOR i IN 1..v_arr.COUNT
@@ -160,7 +160,7 @@ $end
 
     MEMBER PROCEDURE add_cc(p_cc VARCHAR2)
     IS
-        v_arr   &&array_varchar2_type.;
+        v_arr   &&d_arr_varchar2_udt.;
     BEGIN
         v_arr := html_email_udt.s_split(p_cc);
         FOR i IN 1..v_arr.COUNT
@@ -179,7 +179,7 @@ $end
 
     MEMBER PROCEDURE add_bcc(SELF IN OUT NOCOPY html_email_udt, p_bcc VARCHAR2)
     IS
-        v_arr   &&array_varchar2_type.;
+        v_arr   &&d_arr_varchar2_udt.;
     BEGIN
         v_arr := html_email_udt.s_split(p_bcc);
         FOR i IN 1..v_arr.COUNT

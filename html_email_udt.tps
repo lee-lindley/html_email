@@ -114,9 +114,9 @@ SOFTWARE.
 --
 -- You have no need to muck with these object attributes directly. Use the methods.
     attachments         arr_email_attachment_udt
-    ,arr_to             &&array_varchar2_type.
-    ,arr_cc             &&array_varchar2_type.
-    ,arr_bcc            &&array_varchar2_type.
+    ,arr_to             &&d_arr_varchar2_udt.
+    ,arr_cc             &&d_arr_varchar2_udt.
+    ,arr_bcc            &&d_arr_varchar2_udt.
     ,from_email_addr    VARCHAR2(4000)
     ,reply_to           VARCHAR2(4000)
     ,smtp_server        VARCHAR2(4000)
@@ -261,7 +261,7 @@ $end
     ,STATIC FUNCTION s_split(
          p_s            VARCHAR2
         ,p_separator    VARCHAR2 := ','
-    ) RETURN &&array_varchar2_type.
+    ) RETURN &&d_arr_varchar2_udt.
 )
 NOT FINAL
 ;
