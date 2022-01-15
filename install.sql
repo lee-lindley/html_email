@@ -1,9 +1,10 @@
 --
 -- REQUIRES: arr_varchar2_udt
---      If you have your own just change the name in the define and comment out the call to build it.
+--      If you have your own just change the name in the define d_arr_varchar2_udt 
+--      and set compile_arr_varchar2_udt to FALSE.
 -- We optionally use app_parameter and app_log based on compile directives.
--- If you set either or both TRUE, you need to run the corresponding install scipt.
--- If you set them to FALSE, comment out the call to those scripts.
+-- If you set either or both TRUE, we will run the corresponding install scipt.
+-- If you set them to FALSE, a "do_nothing.sql" script is run instead.
 --
 -- The only functionality html_email_udt gets from app_parameter is determining
 -- whether or not the email addresses the caller used which likely came from that
@@ -23,10 +24,14 @@
 whenever sqlerror exit failure
 set serveroutput on
 set define on
+--
 define use_app_log="TRUE"
 define use_app_parameter="FALSE"
 define use_mime_type="TRUE"
 define use_invoker_rights="FALSE"
+
+COLUMN file_choice NEW_VALUE do_file NOPRINT
+
 ALTER SESSION SET PLSQL_CCFLAGS='use_app_log:&&use_app_log.,use_app_parameter:&&use_app_parameter.,use_mime_type:&&use_mime_type.,use_invoker_rights:&&use_invoker_rights.';
 -- set these appropriately for html_email_udt
 define from_email_addr="donotreply@bogus.com"
@@ -35,23 +40,25 @@ define smtp_server="localhost"
 --
 -- if you do not want to install arr_varchar2_udt, then
 -- change this to your own implementation of a type that consists of TABLE OF VARCHAR2(4000)
--- Or you can just change the name here and it will compile the type with that name
+-- Or you can just change the name here and it will compile the type with that name 
+-- (assuming you leave compile_arr_varchar2_udt as TRUE)
+define compile_arr_varchar2_udt="TRUE"
 define d_arr_varchar2_udt ="arr_varchar2_udt"
 --
 define subdir=plsql_utilities/app_types
-prompt calling &&subdir/arr_varchar2_udt.tps
-@&&subdir/arr_varchar2_udt.tps
+SELECT DECODE('&&compile_arr_varchar2_udt','TRUE','&&subdir./arr_varchar2_udt.tps', 'do_nothing.sql') AS file_choice FROM dual;
+prompt calling &&do_file
+@&&do_file
 --
 define subdir=plsql_utilities/app_log
-prompt calling &&subdir/install_app_log.sql
-@&&subdir/install_app_log.sql
+SELECT DECODE('&&use_app_log','TRUE','&&subdir./install_app_log.sql', 'do_nothing.sql') AS file_choice FROM dual;
+prompt calling &&do_file
+@&&do_file
 --
-/*
--- UNCOMMENT THIS SECTION IF YOU SET use_app_parameter to TRUE
-define subdir=app_parameter
-prompt calling &&subdir/install_app_parameter.sql
-@&&subdir/install_app_parameter.sql
-*/
+define subdir=plsql_utilities/app_parameter
+SELECT DECODE('&&use_app_parameter','TRUE','&&subdir./install_app_parameter.sql', 'do_nothing.sql') AS file_choice FROM dual;
+prompt calling &&do_file
+@&&do_file
 --
 -- END calls to submodule deploys.
 --

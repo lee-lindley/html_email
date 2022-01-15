@@ -305,5 +305,5 @@ that should also be set appropriately.
 to use anything from the submodule. None is required except for the type *arr_varchar2_udt*
 which is easy enough to replace. If you already have a 'TABLE OF VARCHAR2(4000)' object deployed,
 look in the install script for the define of *array_varchar2_type*.
-Comment out any installs you do not need.
+Set the variables to FALSE for any components you do not want.
 
