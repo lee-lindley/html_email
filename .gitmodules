@@ -1,3 +1,6 @@
 [submodule "plsql_utilities"]
 	path = plsql_utilities
 	url = git@github.com:lee-lindley/plsql_utilities.git
+[submodule "app_html_table_pkg"]
+	path = app_html_table_pkg
+	url = git@github.com:lee-lindley/app_html_table_pkg

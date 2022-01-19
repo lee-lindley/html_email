@@ -8,7 +8,7 @@ Oracle PL/SQL E-mail Construction and Transmission with HTML Format Message Body
     * [Example](#example)
     * [Sample Output](#sample-output)
     * [Mime Types](#mime-types)
-    * [Type Specification](#type-specification)
+    * [Manual Page](#manual-page)
     * [Privileges](#privileges)
     * [Method Chaining](#example)
 * [install.sql](#installsql)
@@ -17,17 +17,19 @@ Oracle PL/SQL E-mail Construction and Transmission with HTML Format Message Body
 
 Clone this repository or download it as a zip archive.
 
-Note: [plsql_utilties](https://github.com/lee-lindley/plsql_utilities) is provided as a submodule,
+Note: [plsql_utilties](https://github.com/lee-lindley/plsql_utilities) 
+and [app_html_table_pkg](https://github.com/lee-lindley/app_html_table_pkg)
+are provided as submodules,
 so use the clone command with recursive-submodules option:
 
 `git clone --recursive-submodules https://github.com/lee-lindley/html_email.git`
 
-or download it separately as a zip archive and extract the content of root folder
-into *plsql_utilities* folder.
+or download them separately as zip archives and extract the content of root folder
+into *plsql_utilities* and *app_html_table_pkg* folders respectively.
 
 Follow the instructions in [install.sql](#installsql)
 
-Note that you do not absolutely require the submodule. The only essential
+Note that you do not absolutely require either submodule. The only essential
 element is *arr_varchar2_udt* which is simple enough to create yourself
 as noted in [install.sql](#installsql).
 
@@ -134,7 +136,7 @@ MS Windows seem to pay attention almost exclusively to the file extension, so I
 do not think you will suffer any harm by sticking with these two defaults. Nevertheless,
 we provide a way to do it right, and that is the default behavior if you use "install.sql".
 
-### Type Specification
+### Manual Page
 
 Although object attributes cannot be made private, you have 
 no need for them. The object interface is through the methods.
@@ -146,6 +148,11 @@ overriding or supplementing methods with localized html conventions.
 It is recommended that you edit [install.sql](#installsql) before deploying to set suitable values 
 for *smtp_server*, *reply_to* and *from_email_addr* define variables. The DEFAULT values
 on the constructor parameters below are those currently defined in "install.sql".
+
+#### html_email_udt (CONSTRUCTOR)
+
+The procedure version does the work so that if the type *html_email_udt* is inherited, the child class can
+call it.
 
 ```sql
     CONSTRUCTOR FUNCTION html_email_udt(
@@ -174,18 +181,95 @@ on the constructor parameters below are those currently defined in "install.sql"
         ,p_body             CLOB DEFAULT NULL
         -- compile time decision whether attribute 'log' is included
         ,p_log              app_log_udt DEFAULT NULL
+```
+##### p_to_list, p_cc_list, p_bcc_list
 
+A string that contains one or more email addresses separated with comma and optional white space
+for the TO addresses, Carbon Copy addresses and Blind Carbon Copy addresses, respectively.
+
+##### p_from_email_addr
+
+A string containing a single email address that you likely configured at compile time. The
+parameter allows this to be overridden.
+
+##### p_reply_to
+
+A string containing a single email address that you likely configured at compile time. The
+parameter allows this to be overridden. This is the REPLY-TO address of the standard and can
+be different than the displayed FROM email address. Typically set to a no-reply style address
+because you do not want replies coming to the database server, but perhaps you have a mailbox
+configured for this.
+
+##### p_smtp_server
+
+Name of the mail server to contact on port 25. You will have configured this on install and
+are unlikely to change it on the fly; however, a scenario where you have different email
+servers is possible.
+
+##### p_subject
+
+The email subject line. You can also add it later with a method.
+
+##### p_body
+
+The HTML content of the email body. You can put the entire content here, start it here and add to it,
+or put nothing here and build it entirely with methods (most common case).
+
+##### p_log
+
+Logging object instance (if compiled with the 'log' attribute).
+
+#### send
+
+```sql
     --
     -- best explanation of method chaining rules I found is
     -- https://stevenfeuersteinonplsql.blogspot.com/2019/09/object-type-methods-part-3.html
     --
     ,FINAL MEMBER PROCEDURE send(SELF IN html_email_udt) -- cannot be in/out if we allow chaining it.
+```
+
+Opens the port to the email server, negotiates, sends the gnarly insides of an email negotiation
+including the header with addresses and boundary definition, sends the HTML body, then adds any
+attachments. Closes the connection.
+
+At that point the email object is done. I have not experimented with reusing it with a changed
+address list or server. Perhaps it will work. Generally at this point you let the object go.
+
+#### add_paragraph
+
+```sql
     ,MEMBER PROCEDURE add_paragraph(SELF IN OUT NOCOPY html_email_udt , p_clob CLOB)
     ,MEMBER FUNCTION  add_paragraph(p_clob CLOB) RETURN html_email_udt
+```
+
+If the email body is not empty, adds '\<br\>' to separate from the last set of email. Yes
+I know it shouldn't be necessary, but email clients are HTML stupid. 
+
+Adds '\<p\>' followed by your text. It does not bother with the closing '\</p\>' tag.
+
+#### add_code_block
+
+```sql
     ,MEMBER PROCEDURE add_code_block(SELF IN OUT NOCOPY html_email_udt , p_clob CLOB)
     ,MEMBER FUNCTION  add_code_block(p_clob CLOB) RETURN html_email_udt
+```
+If the email body is not empty, adds '\<br\>' tag.
+
+Adds '\<pre\><code\>', your text, then '\</code\>\</pre\>\<br\>'.
+
+#### add_to_body
+
+```sql
     ,MEMBER PROCEDURE add_to_body(SELF IN OUT NOCOPY html_email_udt, p_clob CLOB)
     ,MEMBER FUNCTION  add_to_body(p_clob CLOB) RETURN html_email_udt
+```
+
+Simple append of your text to the email body. Does not add any tags.
+
+#### add_table_to_body
+
+```sql
     ,MEMBER PROCEDURE add_table_to_body( -- see cursor_to_table
         SELF IN OUT NOCOPY html_email_udt
         ,p_sql_string   CLOB            := NULL
@@ -197,6 +281,19 @@ on the constructor parameters below are those currently defined in "install.sql"
         ,p_refcursor    SYS_REFCURSOR  := NULL
         ,p_caption      VARCHAR2        := NULL
     ) RETURN html_email_udt
+```
+
+Given a string containing a SQL query, or a SYS_REFCURSOR (but not both), run the query
+through a *DBMS_XMLGEN*, *XMLTYPE.transform* operation to produce an HTML table that is
+inserted into your email. This works well enough, but is lacking in formatting control
+and has a few rough edges like translating spaces in your column aliases to '\_x0020\_'.
+
+See [app_html_table_pkg](https://github.com/lee-lindley/app_html_table_pkg) which is included
+as a submodule and which you can optionally compile as a more sophisticated alternative.
+
+#### add_to, add_cc, add_bcc
+
+```sql
     -- these take strings that can have multiple comma separated email addresses
     ,MEMBER PROCEDURE add_to(SELF IN OUT NOCOPY html_email_udt, p_to VARCHAR2) 
     ,MEMBER FUNCTION  add_to(p_to VARCHAR2)  RETURN html_email_udt
@@ -204,8 +301,26 @@ on the constructor parameters below are those currently defined in "install.sql"
     ,MEMBER FUNCTION  add_cc(p_cc VARCHAR2) RETURN html_email_udt
     ,MEMBER PROCEDURE add_bcc(SELF IN OUT NOCOPY html_email_udt, p_bcc VARCHAR2)
     ,MEMBER FUNCTION  add_bcc(p_bcc VARCHAR2) RETURN html_email_udt
+```
+You can put them all in the constructor and/or add addresses at any time during
+construction of the email prior to *send*. You might conditionally add an addressee
+while constructing the email after determining an edge condition.
+
+As with the constructor, these take string with comma separated email addresses. Leading
+and trailing spaces are removed from each one.
+
+#### add_subject
+
+```sql
     ,MEMBER PROCEDURE add_subject(SELF IN OUT NOCOPY html_email_udt, p_subject VARCHAR2)
     ,MEMBER FUNCTION  add_subject(p_subject VARCHAR2) RETURN html_email_udt
+```
+
+If you already added one in the constructor, this replaces it
+
+#### add_attachment
+
+```sql
     ,MEMBER PROCEDURE add_attachment(
         SELF IN OUT NOCOPY html_email_udt
         ,p_file_name    VARCHAR2
@@ -228,9 +343,33 @@ on the constructor parameters below are those currently defined in "install.sql"
     ) RETURN html_email_udt
 ```
 
-As a bonus it provides a static function to convert a cursor or query string 
-into a CLOB containing an HTML table. You can include that in the email
-or use it for a different purpose. It is called by member method *add_table_to_body*.
+##### p_file_name
+
+The attachment
+itself is just data in the email body, but it has an attribute called 
+**'Content-Disposition: attachment; filename=YOUR_NAME'**. This is what appears in email clients as the suggested
+filename for the attachment.
+
+(I cannot tell you why I used p_file_name instead of the more common p_filename.)
+
+##### p_clob_content
+
+Provide a CLOB if you have a text attachment like a CSV file.
+
+##### p_blob_content
+
+Provide a BLOB if you have a binar file attachment like an XSLT file. 
+
+Note that you cannot provide
+both *p_clob_content* and *p_blob_content*. One of them must be null.
+
+##### p_attachment
+
+Attachments are object types that contain *file_name*, *clob_content*, *blob_content*, and *mime_type* member
+attributes. If you want fine grained control over the mime_type rather than letting *html_email_udt*
+determine it from the filename extension, you can construct the object yourself and provide it.
+
+#### cursor_to_table
 ```sql
     --Note: that if the cursor does not return any rows, we silently pass back an empty clob
     ,STATIC FUNCTION cursor_to_table(
@@ -247,6 +386,13 @@ or use it for a different purpose. It is called by member method *add_table_to_b
         ,p_log              app_log_udt DEFAULT NULL 
     ) RETURN CLOB
 ```
+As a bonus it provides this static function to convert a cursor or query string 
+into a CLOB containing an HTML table. You can include that in the email
+or use it for a different purpose. It is called by member method *add_table_to_body*.
+
+See 
+[app_html_table_pkg](https://github.com/lee-lindley/app_html_table_pkg) for a better option.
+
 ### Privileges
 
 The privs required to use *UTL_SMTP* and to
@@ -290,11 +436,15 @@ EXCEPTION WHEN OTHERS THEN
     RAISE;
 END;
 ```
+## app_html_table_pkg
+
+See the documentation in the package [README.md](https://github.com/lee-lindley/app_html_table_pkg).
+
 ## install.sql
 
 Runs each of these scripts in correct order and with compile options. There are a set
-of five sqlplus "define" commands at the top that populate compile directives in
-*PLSQL_CCFLAGS*.
+of six sqlplus "define" commands at the top that populate compile directives in
+*PLSQL_CCFLAGS* and control whether or not deployment scripts are executed.
 
     ALTER SESSION SET PLSQL_CCFLAGS='use_app_log:TRUE,use_app_parameter:FALSE,use_mime_type:TRUE,use_invoker_rights:FALSE';
 
@@ -306,4 +456,7 @@ to use anything from the submodule. None is required except for the type *arr_va
 which is easy enough to replace. If you already have a 'TABLE OF VARCHAR2(4000)' object deployed,
 look in the install script for the define of *array_varchar2_type*.
 Set the variables to FALSE for any components you do not want.
+
+Likewise, the define named compile_app_html_table_pkg is set to FALSE as the default. Change it to TRUE
+if you want to add that package to the database.
 

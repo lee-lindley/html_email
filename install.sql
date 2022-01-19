@@ -25,6 +25,11 @@ whenever sqlerror exit failure
 set serveroutput on
 set define on
 --
+-- submodule app_html_table_pkg can be compiled. It is standalone from html_email_udt.
+-- you do not need to compile it to compile and use html_email_udt, but it is a nice
+-- companion package
+define compile_app_html_table_pkg="FALSE"
+--
 define use_app_log="TRUE"
 define use_app_parameter="FALSE"
 define use_mime_type="TRUE"
@@ -46,17 +51,22 @@ define compile_arr_varchar2_udt="TRUE"
 define d_arr_varchar2_udt ="arr_varchar2_udt"
 --
 define subdir=plsql_utilities/app_types
-SELECT DECODE('&&compile_arr_varchar2_udt','TRUE','&&subdir./arr_varchar2_udt.tps', 'do_nothing.sql') AS file_choice FROM dual;
+SELECT DECODE('&&compile_arr_varchar2_udt','TRUE','&&subdir./arr_varchar2_udt.tps', 'do_nothing.sql arr_varchar2_udt') AS file_choice FROM dual;
 prompt calling &&do_file
 @&&do_file
 --
 define subdir=plsql_utilities/app_log
-SELECT DECODE('&&use_app_log','TRUE','&&subdir./install_app_log.sql', 'do_nothing.sql') AS file_choice FROM dual;
+SELECT DECODE('&&use_app_log','TRUE','&&subdir./install_app_log.sql', 'do_nothing.sql app_log') AS file_choice FROM dual;
 prompt calling &&do_file
 @&&do_file
 --
 define subdir=plsql_utilities/app_parameter
-SELECT DECODE('&&use_app_parameter','TRUE','&&subdir./install_app_parameter.sql', 'do_nothing.sql') AS file_choice FROM dual;
+SELECT DECODE('&&use_app_parameter','TRUE','&&subdir./install_app_parameter.sql', 'do_nothing.sql app_parameter') AS file_choice FROM dual;
+prompt calling &&do_file
+@&&do_file
+--
+define subdir=app_html_table_pkg
+SELECT DECODE('&&compile_app_html_table_pkg','TRUE','&&subdir./install.sql', 'do_nothing.sql app_html_table_pkg') AS file_choice FROM dual;
 prompt calling &&do_file
 @&&do_file
 --
