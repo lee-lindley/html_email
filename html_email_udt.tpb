@@ -24,6 +24,7 @@ $end
         );
         RETURN;
     END; -- end constructor html_email_udt
+
     FINAL MEMBER PROCEDURE html_email_constructor(
         SELF IN OUT NOCOPY html_email_udt
         ,p_to_list          VARCHAR2 DEFAULT NULL
@@ -591,6 +592,23 @@ $if $$use_app_log $then
                                THEN ' with '||TO_CHAR(attachments.COUNT)||' attachments' 
                           END
         );
+        DECLARE
+            l_r VARCHAR2(32767);
+        BEGIN
+            FOR i IN 1..arr_to.COUNT
+            LOOP
+                l_r := l_r||', '||arr_to(i);
+            END LOOP;
+            FOR i IN 1..arr_cc.COUNT
+            LOOP
+                l_r := l_r||', '||arr_cc(i);
+            END LOOP;
+            FOR i IN 1..arr_bcc.COUNT
+            LOOP
+                l_r := l_r||', '||arr_bcc(i);
+            END LOOP;
+            v_log.log_p( 'recipients: '||SUBSTR(l_r,3) ); -- trim leading comma and space
+        END;
 $end
 $if $$use_app_log $then
         EXCEPTION WHEN OTHERS THEN

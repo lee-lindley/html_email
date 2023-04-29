@@ -24,6 +24,7 @@
 whenever sqlerror exit failure
 set serveroutput on
 set define on
+set verify off
 --
 -- submodule app_html_table_pkg can be compiled. It is standalone from html_email_udt.
 -- you do not need to compile it to compile and use html_email_udt, but it is a nice
@@ -55,13 +56,15 @@ SELECT DECODE('&&compile_arr_varchar2_udt','TRUE','&&subdir./arr_varchar2_udt.tp
 prompt calling &&do_file
 @&&do_file
 --
+define compile_app_log=&&use_app_log
 define subdir=plsql_utilities/app_log
-SELECT DECODE('&&use_app_log','TRUE','&&subdir./install_app_log.sql', 'do_nothing.sql app_log') AS file_choice FROM dual;
+SELECT DECODE('&&compile_app_log','TRUE','&&subdir./install_app_log.sql', 'do_nothing.sql app_log') AS file_choice FROM dual;
 prompt calling &&do_file
 @&&do_file
 --
+define compile_app_parameter=&&use_app_parameter
 define subdir=plsql_utilities/app_parameter
-SELECT DECODE('&&use_app_parameter','TRUE','&&subdir./install_app_parameter.sql', 'do_nothing.sql app_parameter') AS file_choice FROM dual;
+SELECT DECODE('&&compile_app_parameter','TRUE','&&subdir./install_app_parameter.sql', 'do_nothing.sql app_parameter') AS file_choice FROM dual;
 prompt calling &&do_file
 @&&do_file
 --
