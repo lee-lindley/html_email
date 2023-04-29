@@ -385,7 +385,8 @@ $end
         RETURN v_html;
     END cursor_to_table;
 
-    FINAL MEMBER PROCEDURE send(SELF IN html_email_udt) -- so it can be chained
+    --FINAL 
+    MEMBER PROCEDURE send(SELF IN html_email_udt) -- so it can be chained
     IS
         v_smtp              UTL_SMTP.connection;
         v_myhostname        VARCHAR2(255);
