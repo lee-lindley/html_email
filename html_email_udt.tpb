@@ -477,7 +477,7 @@ $end
             raise_application_error(-20835,'no recipients were provided before calling html_email_udt.send');
         END IF;
 
-        v_smtp := UTL_SMTP.open_connection(smtp_server, 25);
+        v_smtp := UTL_SMTP.open_connection(host => smtp_server, port => 25, tx_timeout => 20);
 
         -- open the connection to remote (or local) mail server and say hello!
         v_myhostname := SYS_CONTEXT('USERENV','SERVER_HOST');
