@@ -20,9 +20,9 @@ Clone this repository or download it as a zip archive.
 Note: [plsql_utilties](https://github.com/lee-lindley/plsql_utilities) 
 and [app_html_table_pkg](https://github.com/lee-lindley/app_html_table_pkg)
 are provided as submodules,
-so use the clone command with recursive-submodules option:
+so use the clone command with recurse-submodules option:
 
-`git clone --recursive-submodules https://github.com/lee-lindley/html_email.git`
+`git clone --recurse-submodules https://github.com/lee-lindley/html_email.git`
 
 or download them separately as zip archives and extract the content of root folder
 into *plsql_utilities* and *app_html_table_pkg* folders respectively.
